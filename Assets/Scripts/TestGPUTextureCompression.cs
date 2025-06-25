@@ -9,7 +9,7 @@ public class TestGPUTextureCompression : MonoBehaviour
     public Texture m_SourceTexture;
 
     private GPUTextureCompressor m_TextureCompressor;
-    private Texture m_TargetTexture;
+    [SerializeField]private Texture m_TargetTexture;
     private bool m_SRGB = true;
     private int m_SelectFormat = 2;
     private int m_EncodeCountPerFrame = 1;

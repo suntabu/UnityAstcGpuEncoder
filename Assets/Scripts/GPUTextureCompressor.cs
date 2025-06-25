@@ -19,7 +19,7 @@ namespace ASTCEncoder
     #if UNITY_EDITOR
         // 在编辑器中仍然使用ASTC压缩。由于PC平台不支持ASTC，所以需要在压缩的同时会将压缩结果解压到uav中
         // 这个选项的目的是方便在编辑器中预览压缩后的效果
-        private static bool s_DecompressInEditor = true;
+        private static bool s_DecompressInEditor = false;
     #endif
     
         // 指定ASTC的块大小，只有当UseASTC()返回true时才有效
@@ -39,6 +39,7 @@ namespace ASTCEncoder
         private static int k_DestRectId = Shader.PropertyToID("_DestRect");
         private static readonly int k_IntegerFromQuintsId = Shader.PropertyToID("integer_from_quints");
         private static readonly int k_ColorQuantTableId = Shader.PropertyToID("color_quant_table");
+        private static readonly int ScrambleTable = Shader.PropertyToID("ScrambleTable");
 
         public static bool DecompressAstc()
         {
@@ -190,6 +191,7 @@ namespace ASTCEncoder
                     colorQuantTable[i] += 0.5f;
                 m_CompressMaterial.SetFloatArray(k_IntegerFromQuintsId, quintsLookup);
                 m_CompressMaterial.SetFloatArray(k_ColorQuantTableId, colorQuantTable);
+                m_CompressMaterial.SetFloatArray(ScrambleTable, LIBII.AstcScrambleTable.ScrambleTable);
             }
             
             if (DecompressAstc())

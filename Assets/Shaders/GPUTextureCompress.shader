@@ -42,7 +42,7 @@
             
             uint4 frag (v2f i) : SV_Target
             {
-                return Compress(floor(i.vertex.xy) * PIXEL_COUNT_1D);
+                return Compress(floor(i.vertex.xy) * DIM);
             }
             ENDHLSL
         }
