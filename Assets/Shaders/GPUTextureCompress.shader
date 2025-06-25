@@ -16,7 +16,6 @@
             #pragma target 4.5
 
             #pragma multi_compile_local _COMPRESS_ASTC4x4 _COMPRESS_ASTC5x5 _COMPRESS_ASTC6x6
-            #pragma shader_feature_local __ _DECOMPRESS_RGB     // 目前仅在编辑器中测试用，不需要打包，因此改为shader_feature
             #pragma multi_compile __ _GPU_COMPRESS_SRGB
 
             #include "GPUTextureCompress.hlsl"
