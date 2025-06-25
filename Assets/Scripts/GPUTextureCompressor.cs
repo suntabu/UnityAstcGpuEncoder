@@ -9,10 +9,20 @@ namespace ASTCEncoder
         ASTC_4x4,
         ASTC_5x5,
         ASTC_6x6,
+        ASTC_8x8,
+        ASTC_10x10,
+        ASTC_12x12,
     }
 
     public class GPUTextureCompressor : MonoBehaviour
     {
+        private const string BLOCK_SIZE_4x4 = "BLOCK_SIZE_4x4";
+        private const string BLOCK_SIZE_5x5 = "BLOCK_SIZE_5x5";
+        private const string BLOCK_SIZE_6x6 = "BLOCK_SIZE_6x6";
+        private const string BLOCK_SIZE_8x8 = "BLOCK_SIZE_8x8";
+        private const string BLOCK_SIZE_10x10 = "BLOCK_SIZE_10x10";
+        private const string BLOCK_SIZE_12x12 = "BLOCK_SIZE_12x12";
+        
         // 安卓模拟器可能不支持GPU压缩ASTC，检测到模拟器的话应该关闭GPU压缩
         public static bool EnableCompress { get; set; } = true;
 
@@ -90,6 +100,9 @@ namespace ASTCEncoder
                     case ASTC_BLOCKSIZE.ASTC_4x4: return 4;
                     case ASTC_BLOCKSIZE.ASTC_5x5: return 5;
                     case ASTC_BLOCKSIZE.ASTC_6x6: return 6;
+                    case ASTC_BLOCKSIZE.ASTC_8x8: return 8;
+                    case ASTC_BLOCKSIZE.ASTC_10x10: return 10;
+                    case ASTC_BLOCKSIZE.ASTC_12x12: return 12;
                     default: throw new System.ArgumentException("Invalid ASTC block size");
                 }
             }
@@ -113,6 +126,26 @@ namespace ASTCEncoder
 
             m_CompressMaterial = new Material(compressShader);
             m_CompressMaterial.hideFlags = HideFlags.HideAndDontSave;
+            
+            string keyword = blocksize switch
+            {
+                ASTC_BLOCKSIZE.ASTC_4x4 => BLOCK_SIZE_4x4,
+                ASTC_BLOCKSIZE.ASTC_5x5 => BLOCK_SIZE_5x5,
+                ASTC_BLOCKSIZE.ASTC_6x6 => BLOCK_SIZE_6x6,
+                ASTC_BLOCKSIZE.ASTC_8x8 => BLOCK_SIZE_8x8,
+                ASTC_BLOCKSIZE.ASTC_10x10 => BLOCK_SIZE_10x10,
+                ASTC_BLOCKSIZE.ASTC_12x12 => BLOCK_SIZE_12x12,
+                _ => BLOCK_SIZE_6x6
+            };
+
+            m_CompressMaterial.DisableKeyword(BLOCK_SIZE_4x4);
+            m_CompressMaterial.DisableKeyword(BLOCK_SIZE_5x5);
+            m_CompressMaterial.DisableKeyword(BLOCK_SIZE_6x6);
+            m_CompressMaterial.DisableKeyword(BLOCK_SIZE_8x8);
+            m_CompressMaterial.DisableKeyword(BLOCK_SIZE_10x10);
+            m_CompressMaterial.DisableKeyword(BLOCK_SIZE_12x12);
+
+            m_CompressMaterial.EnableKeyword(keyword);
 
             if (blocksize == ASTC_BLOCKSIZE.ASTC_5x5)
             {

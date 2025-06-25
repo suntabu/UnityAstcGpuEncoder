@@ -15,7 +15,7 @@
             #pragma fragment frag
             #pragma target 4.5
 
-            #pragma multi_compile_local _COMPRESS_ASTC4x4 _COMPRESS_ASTC5x5 _COMPRESS_ASTC6x6
+            #pragma multi_compile_local BLOCK_SIZE_4x4 BLOCK_SIZE_5x5 BLOCK_SIZE_6x6 BLOCK_SIZE_8x8 BLOCK_SIZE_10x10 BLOCK_SIZE_12x12
             #pragma multi_compile __ _GPU_COMPRESS_SRGB
 
             #include "GPUTextureCompress.hlsl"
