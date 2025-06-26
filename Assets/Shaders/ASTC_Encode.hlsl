@@ -1,15 +1,4 @@
-#ifndef THREAD_NUM_X
-#define THREAD_NUM_X 8
-#endif
-
-#ifndef THREAD_NUM_Y
-#define THREAD_NUM_Y 8
-#endif
-
-// #ifndef BLOCK_6X6
-// #define BLOCK_6X6 0
-// #endif
-
+#define HAS_ALPHA 1
 #ifndef HAS_ALPHA
 #define HAS_ALPHA 0
 #endif
@@ -18,15 +7,7 @@
 #define IS_NORMALMAP 0
 #endif
 
-
-// #if BLOCK_6X6
-// #define DIM 6
-// #else
-// #define DIM 4
-// #endif
-//
-// #define BLOCK_SIZE ((DIM) * (DIM))
-
+ 
 // StructuredBuffer<int> ScrambleTable; // 替代原来的静态数组scramble_table
 float ScrambleTable[384];
 #define WEIGHT_QUANTIZE_NUM 32
@@ -75,6 +56,7 @@ float ScrambleTable[384];
 #include "ASTC_Table.hlsl"
 #include "ASTC_IntegerSequenceEncoding.hlsl"
 #include "ASTC_Config.hlsl"
+
 cbuffer constData : register(b0)
 {
 	int InTexelHeight;
@@ -152,64 +134,64 @@ void principal_component_analysis(float4 texels[BLOCK_SIZE], out float4 e0, out 
 	}
 	pt_mean /= BLOCK_SIZE;
 
-	// float4x4 cov = 0;
-	// float s = 0;
-	// [unroll]
-	// for (int k = 0; k < BLOCK_SIZE; ++k)
-	// {
-	// 	float4 texel = texels[k] - pt_mean;
-	// 	for (i = 0; i < 4; ++i)
-	// 	{
-	// 		for (int j = 0; j < 4; ++j)
-	// 		{
-	// 			cov[i][j] += texel[i] * texel[j];
-	// 		}
-	// 	}
-	// }
-	// cov /= BLOCK_SIZE - 1;
-	//
-	// float4 vec_k = eigen_vector(cov);
-	//
-	// find_min_max(texels, pt_mean, vec_k, e0, e1);
-
-	// 使用一维数组替代 float4x4
-	float cov[16] = (float[16])0;
-	#define COV(i,j) cov[(i)*4 + (j)]
-
+	float4x4 cov = 0;
+	float s = 0;
 	[unroll]
 	for (int k = 0; k < BLOCK_SIZE; ++k)
 	{
 		float4 texel = texels[k] - pt_mean;
-
-		[unroll]
-		for (int i = 0; i < 4; ++i)
+		for (i = 0; i < 4; ++i)
 		{
-			[unroll]
 			for (int j = 0; j < 4; ++j)
 			{
-				COV(i, j) += texel[i] * texel[j];
+				cov[i][j] += texel[i] * texel[j];
 			}
 		}
 	}
-
-	[unroll]
-	for (int q = 0; q < 16; ++q)
-	{
-		cov[q] /= BLOCK_SIZE - 1;
-	}
-
-	// 将 cov 数组重新组合成 float4x4（如果后续函数需要）
-	float4x4 covMatrix = float4x4(
-		float4(cov[0], cov[1], cov[2], cov[3]),
-		float4(cov[4], cov[5], cov[6], cov[7]),
-		float4(cov[8], cov[9], cov[10], cov[11]),
-		float4(cov[12], cov[13], cov[14], cov[15])
-	);
-
-	// 继续 PCA 计算...
-	float4 vec_k = eigen_vector(covMatrix);
-
+	cov /= BLOCK_SIZE - 1;
+	
+	float4 vec_k = eigen_vector(cov);
+	
 	find_min_max(texels, pt_mean, vec_k, e0, e1);
+
+	// 使用一维数组替代 float4x4
+	// float cov[16] = (float[16])0;
+	// #define COV(i,j) cov[(i)*4 + (j)]
+	//
+	// [unroll]
+	// for (int k = 0; k < BLOCK_SIZE; ++k)
+	// {
+	// 	float4 texel = texels[k] - pt_mean;
+	//
+	// 	[unroll]
+	// 	for (i = 0; i < 4; ++i)
+	// 	{
+	// 		[unroll]
+	// 		for (int j = 0; j < 4; ++j)
+	// 		{
+	// 			COV(i, j) += texel[i] * texel[j];
+	// 		}
+	// 	}
+	// }
+	//
+	// [unroll]
+	// for (int q = 0; q < 16; ++q)
+	// {
+	// 	cov[q] /= BLOCK_SIZE - 1;
+	// }
+	//
+	// // 将 cov 数组重新组合成 float4x4（如果后续函数需要）
+	// float4x4 covMatrix = float4x4(
+	// 	float4(cov[0], cov[1], cov[2], cov[3]),
+	// 	float4(cov[4], cov[5], cov[6], cov[7]),
+	// 	float4(cov[8], cov[9], cov[10], cov[11]),
+	// 	float4(cov[12], cov[13], cov[14], cov[15])
+	// );
+	//
+	// // 继续 PCA 计算...
+	// float4 vec_k = eigen_vector(covMatrix);
+	//
+	// find_min_max(texels, pt_mean, vec_k, e0, e1);
 
 }
 
@@ -381,7 +363,7 @@ void calculate_normal_weights(float4 texels[BLOCK_SIZE],
 		float minw = 1e31f;
 		float maxw = -1e31f;
 
-		#if BLOCK_6X6
+#if BLOCK_6X6
 		[unroll]
 		for (i = 0; i < X_GRIDS * Y_GRIDS; ++i)
 		{
@@ -391,7 +373,7 @@ void calculate_normal_weights(float4 texels[BLOCK_SIZE],
 			maxw = max(w, maxw);
 			projw[i] = w;
 		}
-		#else
+#else
 		// 使用 BLOCK_SIZE 控制最大迭代数
 		const int MAX_LOOPS = min(X_GRIDS * Y_GRIDS, BLOCK_SIZE);
 
@@ -404,7 +386,7 @@ void calculate_normal_weights(float4 texels[BLOCK_SIZE],
 			maxw = max(w, maxw);
 			projw[i] = w;
 		}
-		#endif
+#endif
 
 		float invlen = max(SMALL_VALUE, maxw - minw);
 		invlen = 1.0f / invlen;
@@ -601,35 +583,4 @@ uint4 encode_block(inout float4 texels[BLOCK_SIZE])
 
 }
 
-
-[numthreads(THREAD_NUM_X, THREAD_NUM_Y, 1)] // 一个group里的thread数目
-void MainCS(
-	// 一个thread处理一个block
-	uint3 Gid : SV_GroupID,				// dispatch里的group坐标
-	uint3 GTid : SV_GroupThreadID,		// group里的thread坐标
-	uint3 DTid : SV_DispatchThreadID,	// DispatchThreadID = (GroupID X numthreads) + GroupThreadID
-	uint Gidx : SV_GroupIndex)			// group里的thread坐标展开后的索引
-{
-	uint blockID = DTid.y * InGroupNumX * THREAD_NUM_X + DTid.x;
-	uint BlockNum = (InTexelWidth + DIM - 1) / DIM;
-
-	float4 texels[BLOCK_SIZE];
-	for (int k = 0; k < BLOCK_SIZE; ++k)
-	{		
-		uint2 blockPos;
-		blockPos.y = (uint)(blockID / BlockNum);
-		blockPos.x = blockID - blockPos.y * BlockNum;
-		
-		uint y = k / DIM;
-		uint x = k - y * DIM;
-		uint2 pixelPos = blockPos * DIM + uint2(x, y);
-		float4 texel = InTexture.Load(uint3(pixelPos, 0));
-#if IS_NORMALMAP
-		texel.b = 1.0f;
-		texel.a = 1.0f;
-#endif
-		texels[k] = texel * 255.0f;
-	}
-	OutBuffer[blockID] = encode_block(texels);
-}
-
+ 

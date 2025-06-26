@@ -211,7 +211,7 @@ void bise_endpoints(uint numbers[8], int range, inout uint4 outputs)
 	uint trits = bits_trits_quints_table[range * 3 + 1];
 	uint quints = bits_trits_quints_table[range * 3 + 2];
 
-#if HAS_ALPHA
+#if !HAS_ALPHA
 	int count = 8;
 #else
 	int count = 6;
