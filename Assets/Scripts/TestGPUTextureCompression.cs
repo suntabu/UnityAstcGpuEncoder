@@ -2,9 +2,12 @@
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 public class TestGPUTextureCompression : MonoBehaviour
 {
+    public RawImage m_RawImage;
+    
     public Shader m_CompressShader;
     public Texture m_SourceTexture;
 
@@ -41,6 +44,7 @@ public class TestGPUTextureCompression : MonoBehaviour
             m_TargetTexture = null;
         }
 
+        m_RawImage.texture = m_TargetTexture != null ? m_TargetTexture : m_SourceTexture;
         GetComponent<MeshRenderer>().material.mainTexture = m_TargetTexture != null ? m_TargetTexture : m_SourceTexture;
     }
 

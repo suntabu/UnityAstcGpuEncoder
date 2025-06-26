@@ -61,7 +61,7 @@ static const int integer_from_trits[243] =
 
 };
 
-static const int integer_from_quints_[125] =
+static const int integer_from_quints[125] =
 {
 	0,1,2,3,4, 			8,9,10,11,12, 			16,17,18,19,20,			24,25,26,27,28, 		5,13,21,29,6,
 	32,33,34,35,36, 	40,41,42,43,44, 		48,49,50,51,52, 		56,57,58,59,60, 		37,45,53,61,14,	
@@ -191,7 +191,7 @@ void encode_quints(uint bitcount,
 	split_high_low(b1, bitcount, q1, m1);
 	split_high_low(b2, bitcount, q2, m2);
 
-	uint packhigh = integer_from_quints_[q2 * 25 + q1 * 5 + q0];
+	uint packhigh = integer_from_quints[q2 * 25 + q1 * 5 + q0];
 
 	orbits8_ptr(outputs, outpos, m0, bitcount);	
 	orbits8_ptr(outputs, outpos, packhigh & 7, 3);
@@ -211,7 +211,7 @@ void bise_endpoints(uint numbers[8], int range, inout uint4 outputs)
 	uint trits = bits_trits_quints_table[range * 3 + 1];
 	uint quints = bits_trits_quints_table[range * 3 + 2];
 
-#if !HAS_ALPHA
+#if HAS_ALPHA
 	int count = 8;
 #else
 	int count = 6;
