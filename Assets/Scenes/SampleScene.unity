@@ -156,7 +156,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -400, y: 0}
+  m_AnchoredPosition: {x: -268, y: 22}
   m_SizeDelta: {x: 400, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &36041364
@@ -205,7 +205,6 @@ GameObject:
   - component: {fileID: 332330900}
   - component: {fileID: 332330899}
   - component: {fileID: 332330898}
-  - component: {fileID: 332330901}
   - component: {fileID: 332330897}
   m_Layer: 0
   m_Name: Cube
@@ -226,9 +225,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43b36e79750049a46a7422cfd3c0c09a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_RawImage: {fileID: 0}
+  m_RawImage: {fileID: 36041364}
   m_CompressShader: {fileID: 4800000, guid: 1b148435fdaa9d74283ff750550d590e, type: 3}
-  m_SourceTexture: {fileID: 2800000, guid: 0724628f6be623f43a51f353ccaa8268, type: 3}
+  m_SourceTexture: {fileID: 2800000, guid: 24b616178e69cdb449afd08228fd0634, type: 3}
   m_TargetTexture: {fileID: 0}
 --- !u!23 &332330898
 MeshRenderer:
@@ -289,25 +288,12 @@ Transform:
   m_GameObject: {fileID: 332330896}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.07, y: 0, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &332330901
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 332330896}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf01e28eecb8ac54cbdd70174d9b86a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_CompressMaterial: {fileID: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
