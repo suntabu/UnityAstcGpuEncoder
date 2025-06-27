@@ -11,6 +11,7 @@ Library: D:\UnityAstcGpuEncoder\Temp\BurstOutput\tempburstlibs\armeabi-v7a\lib_b
 --float-mode=Fast
 --generate-link-xml=Temp\burst.link.xml
 --temp-folder=D:\UnityAstcGpuEncoder\Temp\Burst
+--debug=Full
 --key-folder=E:/UnityEditor/2022.3.61f1/Editor/Data/PlaybackEngines/AndroidPlayer
 --decode-folder=D:\UnityAstcGpuEncoder\Library\Burst
 --output=D:\UnityAstcGpuEncoder\Temp\BurstOutput\tempburstlibs\armeabi-v7a\lib_burst_generated
@@ -28,6 +29,7 @@ Library: D:\UnityAstcGpuEncoder\Temp\BurstOutput\tempburstlibs\armeabi-v7a\lib_b
 --target-framework=NetFramework
 --generate-link-xml=Temp\burst.link.xml
 --temp-folder=D:\UnityAstcGpuEncoder\Temp\Burst
+--debug=Full
 --key-folder=E:/UnityEditor/2022.3.61f1/Editor/Data/PlaybackEngines/AndroidPlayer
 --decode-folder=D:\UnityAstcGpuEncoder\Library\Burst
 --output=D:\UnityAstcGpuEncoder\Temp\BurstOutput\tempburstlibs\armeabi-v7a\lib_burst_generated

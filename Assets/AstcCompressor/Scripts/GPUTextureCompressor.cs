@@ -45,6 +45,8 @@ namespace ASTCEncoder
         private static int k_DestRectId = Shader.PropertyToID("_DestRect");
         private static readonly int ScrambleTable = Shader.PropertyToID("ScrambleTable");
 
+        private bool isValid = true;
+
 
         public void Prepare(Texture2D texture, ASTC_BLOCKSIZE astcBlockSize)
         {
@@ -64,8 +66,29 @@ namespace ASTCEncoder
             m_TextureWidth = w;
             m_TextureHeight = h;
 
-            var compressShader = Shader.Find("Unlit/GPUTextureCompress");
+            var shaderName = "Unlit/GPUTextureCompress";
+            var compressShader = Shader.Find(shaderName);
+
+            if (!compressShader.isSupported)
+            {
+                Debug.LogError($"GPUTextureCompressor: ASTC not supported {compressShader.isSupported}");
+                isValid = false;
+                return;
+            }
+            else
+            {
+                Debug.Log($"GPUTextureCompressor: ASTC supported {compressShader.isSupported}");
+            }
+
             RecreateMaterial(compressShader, ASTCBlockSize, astcBlockSize);
+
+            if (m_CompressMaterial.shader.name != shaderName)
+            {
+                Debug.LogError($"GPUTextureCompressor: shader compile failed: {m_CompressMaterial.shader.name}");
+
+                isValid = false;
+                return;
+            }
 
             if (m_IntermediateTexture)
                 RenderTexture.ReleaseTemporary(m_IntermediateTexture);
@@ -180,7 +203,7 @@ namespace ASTCEncoder
             m_CompressMaterial = null;
         }
 
-        public Texture2D CreateOutputTexture(int mipCount, bool srgb,
+        private Texture2D CreateOutputTexture(int mipCount, bool srgb,
             GraphicsFormat noCompressFallback = GraphicsFormat.R8G8B8A8_UNorm)
         {
             TextureFormat format = ASTCBlockSize switch
@@ -196,6 +219,10 @@ namespace ASTCEncoder
 
 
             var gfxFormat = GraphicsFormatUtility.GetGraphicsFormat(format, srgb);
+            if (!isValid)
+            {
+                gfxFormat = noCompressFallback;
+            }
 
             Texture2D output;
             var flags = (mipCount != 1) ? TextureCreationFlags.MipChain : TextureCreationFlags.None;
@@ -210,7 +237,13 @@ namespace ASTCEncoder
         {
             try
             {
+                if (!isValid)
+                {
+                    return texture;
+                }
+
                 var targetTexture = CreateOutputTexture(1, srgb, GraphicsFormat.R8G8B8A8_SRGB);
+
 
                 CommandBuffer cmd = CommandBufferPool.Get("GPU Texture Compress");
 
@@ -247,12 +280,13 @@ namespace ASTCEncoder
 
                 Graphics.ExecuteCommandBuffer(cmd);
                 CommandBufferPool.Release(cmd);
+
                 return targetTexture;
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-                return null;
+                return texture;
             }
             finally
             {
