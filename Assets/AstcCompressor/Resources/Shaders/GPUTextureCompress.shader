@@ -15,7 +15,7 @@
             #pragma fragment frag
             #pragma target 4.5
 
-            #pragma multi_compile BLOCK_SIZE_4x4  BLOCK_SIZE_6x6 _GPU_COMPRESS_SRGB  
+            #pragma multi_compile _ BLOCK_SIZE_4x4  BLOCK_SIZE_6x6 _GPU_COMPRESS_SRGB  
 
             #include "GPUTextureCompress.hlsl"
             
@@ -45,4 +45,6 @@
             ENDHLSL
         }
     }
+
+    Fallback "UI/Default"
 }

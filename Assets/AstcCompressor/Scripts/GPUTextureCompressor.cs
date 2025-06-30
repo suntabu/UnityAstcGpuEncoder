@@ -45,7 +45,7 @@ namespace ASTCEncoder
         private static int k_DestRectId = Shader.PropertyToID("_DestRect");
         private static readonly int ScrambleTable = Shader.PropertyToID("ScrambleTable");
 
-        private bool isValid = true;
+        private static bool isValid = true;
 
 
         public void Prepare(Texture2D texture, ASTC_BLOCKSIZE astcBlockSize)
@@ -66,8 +66,19 @@ namespace ASTCEncoder
             m_TextureWidth = w;
             m_TextureHeight = h;
 
+            // Shader.WarmupAllShaders();
+
             var shaderName = "Unlit/GPUTextureCompress";
             var compressShader = Shader.Find(shaderName);
+
+            var variant = new ShaderVariantCollection.ShaderVariant(compressShader, PassType.ScriptableRenderPipeline,
+                "BLOCK_SIZE_4x4");
+
+            var svc = new ShaderVariantCollection();
+            svc.Add(variant);
+            svc.WarmUp();
+            Debug.Log("Loaded shader");
+
 
             if (!compressShader.isSupported)
             {
@@ -227,7 +238,7 @@ namespace ASTCEncoder
             Texture2D output;
             var flags = (mipCount != 1) ? TextureCreationFlags.MipChain : TextureCreationFlags.None;
             output = new Texture2D(m_TextureWidth, m_TextureHeight, gfxFormat, mipCount, flags);
-            ((Texture2D)output).Apply(false, true); // 让贴图变成不可读，以卸载内存只保留显存
+            ((Texture2D)output).Apply(false, false); // 让贴图变成不可读，以卸载内存只保留显存
             output.filterMode = FilterMode.Trilinear;
             output.wrapMode = TextureWrapMode.Clamp;
             return output;
@@ -278,8 +289,21 @@ namespace ASTCEncoder
                     targetTexture, dstElement, mipLevel, 0, 0);
                 cmd.EndSample("CopyTexture");
 
+
                 Graphics.ExecuteCommandBuffer(cmd);
                 CommandBufferPool.Release(cmd);
+
+                var rgba = targetTexture.GetPixel(targetTexture.width / 2, targetTexture.height / 2);
+                Debug.Log($"Compressed Texture: {rgba}");
+//2025/06/30 13:45:11.834 24440 24457 Info Unity Compressed Texture: RGBA(0.780, 0.886, 0.714, 1.000)
+
+                if (!isValid || (Mathf.Abs(rgba.r - 0.780f) < 0.1f &&
+                                 Mathf.Abs(rgba.g - 0.886f) < 0.1f &&
+                                 Mathf.Abs(rgba.b - 0.714f) < 0.1f &&
+                                 Mathf.Abs(rgba.a - 1.000f) < 0.1f))
+                {
+                    return texture;
+                }
 
                 return targetTexture;
             }
