@@ -298,7 +298,7 @@ namespace ASTCEncoder
                 var outputBuffer = new ComputeBuffer(totalBlocks, 16, ComputeBufferType.Default,
                     ComputeBufferMode.Immutable);
 // 设置输入纹理
-                computeShader.SetTexture(kernelIndex, "inputTex", targetTexture);
+                computeShader.SetTexture(kernelIndex, "inputTex", m_IntermediateTexture);
                 computeShader.SetBuffer(kernelIndex, "OutputBuffer", outputBuffer);
 
 // 调用 Compute Shader

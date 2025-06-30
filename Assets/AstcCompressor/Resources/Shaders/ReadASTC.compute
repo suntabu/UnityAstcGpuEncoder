@@ -10,7 +10,6 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     // 采样非压缩纹理
     float4 pixel = inputTex.SampleLevel(samplerinputTex, id.xy/float2(512, 256), 0);
     
-    // 转换为 uint4（例如：将 float 转为 uint）
     uint4 uintPixel;
     uintPixel.x = asuint(pixel.x);
     uintPixel.y = asuint(pixel.y);
