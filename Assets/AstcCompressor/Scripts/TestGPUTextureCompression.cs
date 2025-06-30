@@ -1,4 +1,5 @@
-﻿using ASTCEncoder;
+﻿using System.IO;
+using ASTCEncoder;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -12,7 +13,7 @@ public class TestGPUTextureCompression : MonoBehaviour
     public Texture2D m_SourceTexture;
 
     private GPUTextureCompressor m_TextureCompressor;
-    [SerializeField] private Texture m_TargetTexture;
+    [SerializeField] private Texture2D m_TargetTexture;
     private bool m_SRGB = true;
     private int m_SelectFormat = 2;
     private int m_EncodeCountPerFrame = 1;
@@ -59,6 +60,13 @@ public class TestGPUTextureCompression : MonoBehaviour
             DestroyImmediate(m_TargetTexture);
             m_TextureCompressor.Prepare(m_SourceTexture, blockSize);
             m_TargetTexture = m_TextureCompressor.CompressTexture(m_SourceTexture, 0, 0, m_SRGB);
+            
+            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.R8G8B8A8_UNorm,FormatUsage.ReadPixels)}");
+            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.R8G8B8A8_SRGB,FormatUsage.ReadPixels)}");
+            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.RGBA_ASTC4X4_SRGB,FormatUsage.ReadPixels)}");
+            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.RGBA_ASTC4X4_UNorm,FormatUsage.ReadPixels)}");
+
+            // File.WriteAllBytes($"{m_TargetTexture.name}.png", m_TargetTexture.EncodeToPNG());
         }
         else
         {

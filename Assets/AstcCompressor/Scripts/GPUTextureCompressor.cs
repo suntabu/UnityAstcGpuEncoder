@@ -71,15 +71,6 @@ namespace ASTCEncoder
             var shaderName = "Unlit/GPUTextureCompress";
             var compressShader = Shader.Find(shaderName);
 
-            var variant = new ShaderVariantCollection.ShaderVariant(compressShader, PassType.ScriptableRenderPipeline,
-                "BLOCK_SIZE_4x4");
-
-            var svc = new ShaderVariantCollection();
-            svc.Add(variant);
-            svc.WarmUp();
-            Debug.Log("Loaded shader");
-
-
             if (!compressShader.isSupported)
             {
                 Debug.LogError($"GPUTextureCompressor: ASTC not supported {compressShader.isSupported}");
@@ -293,18 +284,34 @@ namespace ASTCEncoder
                 Graphics.ExecuteCommandBuffer(cmd);
                 CommandBufferPool.Release(cmd);
 
-                var rgba = targetTexture.GetPixel(targetTexture.width / 2, targetTexture.height / 2);
-                Debug.Log($"Compressed Texture: {rgba}");
-//2025/06/30 13:45:11.834 24440 24457 Info Unity Compressed Texture: RGBA(0.780, 0.886, 0.714, 1.000)
+                
+                
+                // 加载 Compute Shader
+                ComputeShader computeShader = Resources.Load<ComputeShader>("Shaders/ReadASTC");
 
-                if (!isValid || (Mathf.Abs(rgba.r - 0.780f) < 0.1f &&
-                                 Mathf.Abs(rgba.g - 0.886f) < 0.1f &&
-                                 Mathf.Abs(rgba.b - 0.714f) < 0.1f &&
-                                 Mathf.Abs(rgba.a - 1.000f) < 0.1f))
-                {
-                    return texture;
-                }
+// 获取内核索引
+                int kernelIndex = computeShader.FindKernel("CSMain");
 
+                var blockCountX = (targetTexture.width + 4 - 1) / 4;
+                var blockCountY = (targetTexture.height + 4 - 1) / 4;
+                var totalBlocks = blockCountX * blockCountY;
+                var outputBuffer = new ComputeBuffer(totalBlocks, 16, ComputeBufferType.Default,
+                    ComputeBufferMode.Immutable);
+// 设置输入纹理
+                computeShader.SetTexture(kernelIndex, "inputTex", targetTexture);
+                computeShader.SetBuffer(kernelIndex, "OutputBuffer", outputBuffer);
+
+// 调用 Compute Shader
+                computeShader.Dispatch(kernelIndex, blockCountX, blockCountY, 1);
+
+                
+               var request = AsyncGPUReadback.Request(outputBuffer, outputBuffer.count * 16, 0, OnAstcDataReady);
+                AsyncGPUReadback.WaitAllRequests();
+                var tex = new Texture2D(targetTexture.width, targetTexture.height, TextureFormat.ASTC_4x4, false);
+                tex.LoadRawTextureData(request.GetData<byte>());
+                tex.Apply();
+                return tex;
+                
                 return targetTexture;
             }
             catch (Exception e)
@@ -318,6 +325,27 @@ namespace ASTCEncoder
             }
         }
 
+        private static void OnAstcDataReady(AsyncGPUReadbackRequest request)
+        {
+            if (request.hasError)
+            {
+                Debug.LogError("GPU readback failed");
+                Debug.LogError(
+                    $"是否完成 {request.done} 层数据大小 {request.layerDataSize} 宽度 {request.width} 高度 {request.height}");
+
+            }
+            else
+            {
+                Debug.Log("GPU readback succeeded");
+                Debug.Log($"是否完成 {request.done} 层数据大小 {request.layerDataSize} 宽度 {request.width} 高度 {request.height}");
+                // var astcData = request.GetData<byte>();
+
+                // var byteArray = new byte[astcData.Length];
+                // astcData.CopyTo(byteArray);
+
+            }
+
+        }
 
         private RenderTargetIdentifier GetSourceTexture(CommandBuffer cmd, Texture2D texture, int blockSize,
             int mipLevel)
