@@ -243,6 +243,7 @@ namespace ASTCEncoder
         public NativeArray<byte> CompressTextureToBytes(Texture2D texture, int dstElement, int mipLevel,
             bool srgb = false)
         {
+            ComputeBuffer outputBuffer = default;
             try
             {
                 if (!isValid)
@@ -300,7 +301,7 @@ namespace ASTCEncoder
                 var blockCountX = (m_TextureWidth + CompressBlockSize - 1) / CompressBlockSize;
                 var blockCountY = (m_TextureHeight + CompressBlockSize - 1) / CompressBlockSize;
                 var totalBlocks = blockCountX * blockCountY;
-                var outputBuffer = new ComputeBuffer(totalBlocks, 16, ComputeBufferType.Default,
+                outputBuffer = new ComputeBuffer(totalBlocks, 16, ComputeBufferType.Default,
                     ComputeBufferMode.Immutable);
 // 设置输入纹理
                 computeShader.SetTexture(kernelIndex, InputTex, m_IntermediateTexture);
@@ -316,8 +317,9 @@ namespace ASTCEncoder
                 AsyncGPUReadback.WaitAllRequests();
 
                 var bytes = request.GetData<byte>();
+
                 int sum = 0;
-                for (int i = 0; i < bytes.Length; i += 128)
+                for (int i = 0; i < bytes.Length; i += 256)
                 {
                     sum += bytes[i];
                 }
@@ -336,6 +338,11 @@ namespace ASTCEncoder
             }
             finally
             {
+                if (outputBuffer != default && outputBuffer.IsValid())
+                {
+                    outputBuffer.Release();
+                }
+
                 Dispose();
             }
         }
@@ -356,7 +363,7 @@ namespace ASTCEncoder
 
                 targetTexture.LoadRawTextureData(bytes);
                 targetTexture.Apply();
-
+                bytes.Dispose();
                 return targetTexture;
             }
             catch (Exception e)
