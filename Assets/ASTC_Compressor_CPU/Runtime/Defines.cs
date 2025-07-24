@@ -5,8 +5,7 @@ namespace ASTCEncoder
     public enum ASTC_BLOCKSIZE
     {
         ASTC_4x4 = 4,
-
-        // ASTC_5x5 = 5,
+        ASTC_5x5 = 5,
         ASTC_6x6 = 6,
         // ASTC_8x8 = 8,
         // ASTC_10x10 = 10,
@@ -22,9 +21,9 @@ namespace ASTCEncoder
         public int textureHeight;
 
 
-        public int BlockCountX => textureWidth / blockSize + (textureWidth % blockSize == 0 ? 0 : 1);
+        public int BlockCountX => (textureWidth + blockSize - 1) / blockSize;
 
-        public int BlockCountY => textureHeight / blockSize + (textureHeight % blockSize == 0 ? 0 : 1);
+        public int BlockCountY => (textureHeight + blockSize - 1) / blockSize;
 
         public int BlockCount => BlockCountX * BlockCountY;
     }

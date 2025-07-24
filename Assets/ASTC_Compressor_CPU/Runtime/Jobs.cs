@@ -24,13 +24,13 @@ namespace ASTCEncoder
             result[index] = Methods.EncodeBlock(blockData, ci);
         }
 
-        public static CompressorJob Create(Texture2D tex, ASTC_BLOCKSIZE blockSize)
+        public static CompressorJob Create(Texture2D tex, ASTC_BLOCKSIZE blockSize, bool hasAlpha = true)
         {
             var ci = new CompressInfo()
             {
                 dim = blockSize,
                 blockSize = (int)blockSize,
-                hasAlpha = true,
+                hasAlpha = hasAlpha,
                 textureWidth = tex.width,
                 textureHeight = tex.height
             };

@@ -92,7 +92,6 @@ namespace ASTCEncoder
         {
             int i = 0;
             float4 pt_mean = 0;
-
             for (i = 0; i < ci.blockSize; ++i)
             {
                 pt_mean += texels[i];
@@ -100,64 +99,41 @@ namespace ASTCEncoder
 
             pt_mean /= ci.blockSize;
 
-            float4x4 cov = 0;
-            float s = 0;
+            float[] cov = new float[16];
+
+
             for (int k = 0; k < ci.blockSize; ++k)
             {
                 float4 texel = texels[k] - pt_mean;
+
+
                 for (i = 0; i < 4; ++i)
                 {
                     for (int j = 0; j < 4; ++j)
                     {
-                        cov[i][j] += texel[i] * texel[j];
+                        cov[(i) * 4 + (j)] += texel[i] * texel[j];
                     }
                 }
             }
 
-            cov /= ci.blockSize - 1;
 
-            float4 vec_k = eigen_vector(cov);
+            for (int q = 0; q < 16; ++q)
+            {
+                cov[q] /= ci.blockSize - 1;
+            }
+
+            // 将 cov 数组重新组合成 float4x4（如果后续函数需要）
+            float4x4 covMatrix = new float4x4(
+                new float4(cov[0], cov[1], cov[2], cov[3]),
+                new float4(cov[4], cov[5], cov[6], cov[7]),
+                new float4(cov[8], cov[9], cov[10], cov[11]),
+                new float4(cov[12], cov[13], cov[14], cov[15])
+            );
+
+            // 继续 PCA 计算...
+            float4 vec_k = eigen_vector(covMatrix);
 
             find_min_max(ci, texels, pt_mean, vec_k, out e0, out e1);
-
-            // 使用一维数组替代 float4x4
-            // float cov[16] = (float[16])0;
-            // #define COV(i,j) cov[(i)*4 + (j)]
-            //
-            // 
-            // for (int k = 0; k < blockSize; ++k)
-            // {
-            // 	float4 texel = texels[k] - pt_mean;
-            //
-            // 	
-            // 	for (i = 0; i < 4; ++i)
-            // 	{
-            // 		
-            // 		for (int j = 0; j < 4; ++j)
-            // 		{
-            // 			COV(i, j) += texel[i] * texel[j];
-            // 		}
-            // 	}
-            // }
-            //
-            // 
-            // for (int q = 0; q < 16; ++q)
-            // {
-            // 	cov[q] /= blockSize - 1;
-            // }
-            //
-            // // 将 cov 数组重新组合成 float4x4（如果后续函数需要）
-            // float4x4 covMatrix = float4x4(
-            // 	float4(cov[0], cov[1], cov[2], cov[3]),
-            // 	float4(cov[4], cov[5], cov[6], cov[7]),
-            // 	float4(cov[8], cov[9], cov[10], cov[11]),
-            // 	float4(cov[12], cov[13], cov[14], cov[15])
-            // );
-            //
-            // // 继续 PCA 计算...
-            // float4 vec_k = eigen_vector(covMatrix);
-            //
-            // find_min_max(texels, pt_mean, vec_k, e0, e1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -199,8 +175,8 @@ namespace ASTCEncoder
 
             if (!ci.hasAlpha)
             {
-                ep_quantized[6] = 0;
-                ep_quantized[7] = 0;
+                ep_quantized[6] = 255;
+                ep_quantized[7] = 255;
             }
 
             // endpoints quantized ise encode
@@ -405,7 +381,7 @@ namespace ASTCEncoder
             quantize_weights(projw, weight_range, ref weights);
         }
 
-        static void bise_weights(uint[] numbers, uint range, ref uint4 outputs)
+        static void bise_weights(uint[] nums, uint range, ref uint4 outputs)
         {
             uint bitpos = 0;
             uint bits = CC.bits_trits_quints_table[range * 3 + 0];
@@ -414,28 +390,28 @@ namespace ASTCEncoder
 
             if (trits == 1)
             {
-                encode_trits(bits, numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], ref outputs, ref bitpos);
-                encode_trits(bits, numbers[5], numbers[6], numbers[7], numbers[8], numbers[9], ref outputs, ref bitpos);
-                encode_trits(bits, numbers[10], numbers[11], numbers[12], numbers[13], numbers[14], ref outputs,
+                encode_trits(bits, nums[0], nums[1], nums[2], nums[3], nums[4], ref outputs, ref bitpos);
+                encode_trits(bits, nums[5], nums[6], nums[7], nums[8], nums[9], ref outputs, ref bitpos);
+                encode_trits(bits, nums[10], nums[11], nums[12], nums[13], nums[14], ref outputs,
                     ref bitpos);
-                encode_trits(bits, numbers[15], 0, 0, 0, 0, ref outputs, ref bitpos);
+                encode_trits(bits, nums[15], 0, 0, 0, 0, ref outputs, ref bitpos);
                 bitpos = ((8 + 5 * bits) * 16 + 4) / 5;
             }
             else if (quints == 1)
             {
-                encode_quints(bits, numbers[0], numbers[1], numbers[2], ref outputs, ref bitpos);
-                encode_quints(bits, numbers[3], numbers[4], numbers[5], ref outputs, ref bitpos);
-                encode_quints(bits, numbers[6], numbers[7], numbers[8], ref outputs, ref bitpos);
-                encode_quints(bits, numbers[9], numbers[10], numbers[11], ref outputs, ref bitpos);
-                encode_quints(bits, numbers[12], numbers[13], numbers[14], ref outputs, ref bitpos);
-                encode_quints(bits, numbers[15], 0, 0, ref outputs, ref bitpos);
+                encode_quints(bits, nums[0], nums[1], nums[2], ref outputs, ref bitpos);
+                encode_quints(bits, nums[3], nums[4], nums[5], ref outputs, ref bitpos);
+                encode_quints(bits, nums[6], nums[7], nums[8], ref outputs, ref bitpos);
+                encode_quints(bits, nums[9], nums[10], nums[11], ref outputs, ref bitpos);
+                encode_quints(bits, nums[12], nums[13], nums[14], ref outputs, ref bitpos);
+                encode_quints(bits, nums[15], 0, 0, ref outputs, ref bitpos);
                 bitpos = ((7 + 3 * bits) * 16 + 2) / 3;
             }
             else
             {
                 for (int i = 0; i < 16; ++i)
                 {
-                    orbits8_ptr(ref outputs, ref bitpos, numbers[i], bits);
+                    orbits8_ptr(ref outputs, ref bitpos, nums[i], bits);
                 }
             }
         }
@@ -459,7 +435,7 @@ namespace ASTCEncoder
             uint b4,
             ref uint4 outputs, ref uint outpos)
         {
-            int t0, t1, t2, t3, t4;
+            uint t0, t1, t2, t3, t4;
             uint m0, m1, m2, m3, m4;
 
             split_high_low(b0, bitcount, out t0, out m0);
@@ -491,7 +467,7 @@ namespace ASTCEncoder
             uint b2,
             ref uint4 outputs, ref uint outpos)
         {
-            int q0, q1, q2;
+            uint q0, q1, q2;
             uint m0, m1, m2;
 
             split_high_low(b0, bitcount, out q0, out m0);
@@ -523,11 +499,7 @@ namespace ASTCEncoder
             uint uidx = bitoffset >> 5;
             uint bit_idx = bitoffset & 31;
 
-            uint[] bytes =
-                {
-                    outputs.x, outputs.y, outputs.z, outputs.w
-                }
-                ;
+            uint[] bytes = { outputs.x, outputs.y, outputs.z, outputs.w };
             bytes[uidx] |= (number << (int)bit_idx);
             bytes[uidx + 1] |= (uint)((nidx > uidx) ? ((int)number >> (int)(32 - bit_idx)) : 0);
 
@@ -629,11 +601,11 @@ namespace ASTCEncoder
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void split_high_low(uint n, uint i, out int high, out uint low)
+        static void split_high_low(uint n, uint i, out uint high, out uint low)
         {
             uint low_mask = (uint)((1 << (int)i) - 1);
             low = n & low_mask;
-            high = ((int)n >> (int)i) & 0xFF;
+            high = (uint)((int)n >> (int)i) ;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
