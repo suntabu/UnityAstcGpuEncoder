@@ -1,4 +1,5 @@
 ﻿using System;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -46,6 +47,10 @@ namespace ASTCEncoder
         private static readonly int ScrambleTable = Shader.PropertyToID("ScrambleTable");
 
         private static bool isValid = true;
+        private static readonly int InputTex = Shader.PropertyToID("inputTex");
+        private static readonly int OutputBuffer = Shader.PropertyToID("OutputBuffer");
+        private static readonly int BlockCountX = Shader.PropertyToID("blockCountX");
+        private static readonly int BlockCountY = Shader.PropertyToID("blockCountY");
 
 
         public void Prepare(Texture2D texture, ASTC_BLOCKSIZE astcBlockSize)
@@ -235,16 +240,18 @@ namespace ASTCEncoder
             return output;
         }
 
-        public Texture2D CompressTexture(Texture2D texture, int dstElement, int mipLevel, bool srgb = false)
+        public NativeArray<byte> CompressTextureToBytes(Texture2D texture, int dstElement, int mipLevel,
+            bool srgb = false)
         {
+            ComputeBuffer outputBuffer = default;
             try
             {
                 if (!isValid)
                 {
-                    return texture;
+                    return default;
                 }
 
-                var targetTexture = CreateOutputTexture(1, srgb, GraphicsFormat.R8G8B8A8_SRGB);
+                // var targetTexture = CreateOutputTexture(1, srgb, GraphicsFormat.R8G8B8A8_SRGB);
 
 
                 CommandBuffer cmd = CommandBufferPool.Get("GPU Texture Compress");
@@ -274,44 +281,89 @@ namespace ASTCEncoder
 
                 cmd.SetRenderTarget(BuiltinRenderTextureType.None);
 
-                cmd.BeginSample("CopyTexture");
-                cmd.CopyTexture(
-                    m_IntermediateTextureId, 0, 0, 0, 0, rtWidth, rtHeight,
-                    targetTexture, dstElement, mipLevel, 0, 0);
-                cmd.EndSample("CopyTexture");
+                // cmd.BeginSample("CopyTexture");
+                // cmd.CopyTexture(
+                // m_IntermediateTextureId, 0, 0, 0, 0, rtWidth, rtHeight,
+                // targetTexture, dstElement, mipLevel, 0, 0);
+                // cmd.EndSample("CopyTexture");
 
 
                 Graphics.ExecuteCommandBuffer(cmd);
                 CommandBufferPool.Release(cmd);
 
-                
-                
+
                 // 加载 Compute Shader
                 ComputeShader computeShader = Resources.Load<ComputeShader>("Shaders/ReadASTC");
 
 // 获取内核索引
                 int kernelIndex = computeShader.FindKernel("CSMain");
 
-                var blockCountX = (targetTexture.width + 4 - 1) / 4;
-                var blockCountY = (targetTexture.height + 4 - 1) / 4;
+                var blockCountX = (m_TextureWidth + CompressBlockSize - 1) / CompressBlockSize;
+                var blockCountY = (m_TextureHeight + CompressBlockSize - 1) / CompressBlockSize;
                 var totalBlocks = blockCountX * blockCountY;
-                var outputBuffer = new ComputeBuffer(totalBlocks, 16, ComputeBufferType.Default,
+                outputBuffer = new ComputeBuffer(totalBlocks, 16, ComputeBufferType.Default,
                     ComputeBufferMode.Immutable);
 // 设置输入纹理
-                computeShader.SetTexture(kernelIndex, "inputTex", m_IntermediateTexture);
-                computeShader.SetBuffer(kernelIndex, "OutputBuffer", outputBuffer);
+                computeShader.SetTexture(kernelIndex, InputTex, m_IntermediateTexture);
+                computeShader.SetBuffer(kernelIndex, OutputBuffer, outputBuffer);
+                computeShader.SetInt(BlockCountX, blockCountX);
+                computeShader.SetInt(BlockCountY, blockCountY);
 
 // 调用 Compute Shader
                 computeShader.Dispatch(kernelIndex, blockCountX, blockCountY, 1);
 
-                
-               var request = AsyncGPUReadback.Request(outputBuffer, outputBuffer.count * 16, 0, OnAstcDataReady);
+
+                var request = AsyncGPUReadback.Request(outputBuffer, outputBuffer.count * 16, 0, OnAstcDataReady);
                 AsyncGPUReadback.WaitAllRequests();
-                var tex = new Texture2D(targetTexture.width, targetTexture.height, TextureFormat.ASTC_4x4, false);
-                tex.LoadRawTextureData(request.GetData<byte>());
-                tex.Apply();
-                return tex;
-                
+
+                var bytes = request.GetData<byte>();
+
+                int sum = 0;
+                for (int i = 0; i < bytes.Length; i += 256)
+                {
+                    sum += bytes[i];
+                }
+
+                if (sum == 0)
+                {
+                    return default;
+                }
+
+                return bytes;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return default;
+            }
+            finally
+            {
+                if (outputBuffer != default && outputBuffer.IsValid())
+                {
+                    outputBuffer.Release();
+                }
+
+                Dispose();
+            }
+        }
+
+        public Texture2D CompressTexture(Texture2D texture, int dstElement, int mipLevel, bool srgb = false)
+        {
+            try
+            {
+                var bytes = CompressTextureToBytes(texture, dstElement, mipLevel, srgb);
+
+
+                if (bytes == default)
+                {
+                    return texture;
+                }
+
+                var targetTexture = CreateOutputTexture(1, srgb, GraphicsFormat.R8G8B8A8_SRGB);
+
+                targetTexture.LoadRawTextureData(bytes);
+                targetTexture.Apply();
+                bytes.Dispose();
                 return targetTexture;
             }
             catch (Exception e)
@@ -332,7 +384,6 @@ namespace ASTCEncoder
                 Debug.LogError("GPU readback failed");
                 Debug.LogError(
                     $"是否完成 {request.done} 层数据大小 {request.layerDataSize} 宽度 {request.width} 高度 {request.height}");
-
             }
             else
             {
@@ -342,9 +393,7 @@ namespace ASTCEncoder
 
                 // var byteArray = new byte[astcData.Length];
                 // astcData.CopyTo(byteArray);
-
             }
-
         }
 
         private RenderTargetIdentifier GetSourceTexture(CommandBuffer cmd, Texture2D texture, int blockSize,

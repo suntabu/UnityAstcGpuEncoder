@@ -61,10 +61,10 @@ public class TestGPUTextureCompression : MonoBehaviour
             m_TextureCompressor.Prepare(m_SourceTexture, blockSize);
             m_TargetTexture = m_TextureCompressor.CompressTexture(m_SourceTexture, 0, 0, m_SRGB);
             
-            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.R8G8B8A8_UNorm,FormatUsage.ReadPixels)}");
-            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.R8G8B8A8_SRGB,FormatUsage.ReadPixels)}");
-            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.RGBA_ASTC4X4_SRGB,FormatUsage.ReadPixels)}");
-            Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.RGBA_ASTC4X4_UNorm,FormatUsage.ReadPixels)}");
+            // Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.R8G8B8A8_UNorm,FormatUsage.ReadPixels)}");
+            // Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.R8G8B8A8_SRGB,FormatUsage.ReadPixels)}");
+            // Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.RGBA_ASTC4X4_SRGB,FormatUsage.ReadPixels)}");
+            // Debug.Log($"===> {SystemInfo.IsFormatSupported(GraphicsFormat.RGBA_ASTC4X4_UNorm,FormatUsage.ReadPixels)}");
 
             // File.WriteAllBytes($"{m_TargetTexture.name}.png", m_TargetTexture.EncodeToPNG());
         }

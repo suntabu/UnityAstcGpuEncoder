@@ -3,19 +3,24 @@
 Texture2D<float4> inputTex; // 非压缩纹理
 SamplerState samplerinputTex;
 RWStructuredBuffer<uint4> OutputBuffer : register(u1); // 每个 uint4 = 16 bytes
- 
+
+uint blockCountX;
+uint blockCountY;
+
 [numthreads(1, 1, 1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void CSMain(uint3 id : SV_DispatchThreadID)
 {
+    if (id.x >= blockCountX || id.y >= blockCountY)
+        return;
     // 采样非压缩纹理
-    float4 pixel = inputTex.SampleLevel(samplerinputTex, id.xy/float2(512, 256), 0);
-    
+    float4 pixel = inputTex.SampleLevel(samplerinputTex, id.xy / float2(blockCountX, blockCountY), 0);
+
+    // 转换为 uint4（例如：将 float 转为 uint）
     uint4 uintPixel;
     uintPixel.x = asuint(pixel.x);
     uintPixel.y = asuint(pixel.y);
     uintPixel.z = asuint(pixel.z);
     uintPixel.w = asuint(pixel.w);
-    
     // 写入目标纹理
-    OutputBuffer[id.y * 512 + id.x] = uintPixel;
+    OutputBuffer[id.y * blockCountX + id.x] = uintPixel;
 }
