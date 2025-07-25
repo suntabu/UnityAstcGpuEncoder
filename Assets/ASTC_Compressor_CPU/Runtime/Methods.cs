@@ -539,7 +539,17 @@ namespace ASTCEncoder
                 {
                     for (i = 0; i < c; ++i)
                     {
-                        float4 sum = sample_texel(texels, CC.idx_grids[i], CC.wt_grids[i]);
+                        float4 sum = sample_texel(texels, CC.idx_grids_6x6[i], CC.wt_grids_6x6[i]);
+                        float w = dot(vec_k, sum - ep0);
+                        minw = min(w, minw);
+                        maxw = max(w, maxw);
+                        projw[i] = w;
+                    }
+                }else if (ci.dim == ASTC_BLOCKSIZE.ASTC_5x5)
+                {
+                    for (i = 0; i < c; ++i)
+                    {
+                        float4 sum = sample_texel(texels, CC.idx_grids_5x5[i], CC.wt_grids_5x5[i]);
                         float w = dot(vec_k, sum - ep0);
                         minw = min(w, minw);
                         maxw = max(w, maxw);

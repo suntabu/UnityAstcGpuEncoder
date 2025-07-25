@@ -131,7 +131,7 @@ namespace ASTCEncoder
             102, 103, 70, 71, 38, 110, 111, 78, 79, 46, 118, 119, 86, 87, 54, 126, 127, 94, 95, 62, 39, 47, 55, 63, 31
         };
 
-        public static uint4[] idx_grids = new uint4[]
+        public static uint4[] idx_grids_6x6 = new uint4[]
         {
             new uint4(0, 1, 6, 7),
             new uint4(1, 2, 7, 8),
@@ -150,8 +150,28 @@ namespace ASTCEncoder
             new uint4(27, 28, 33, 34),
             new uint4(28, 29, 34, 35),
         };
+        
+        public static uint4[] idx_grids_5x5 = new uint4[]
+        {
+            new uint4(0, 1, 5, 6),
+            new uint4(1, 2, 6, 7),
+            new uint4(2, 3, 7, 8),
+            new uint4(3, 4, 8, 9),
+            new uint4(5, 6, 10, 11),
+            new uint4(6, 7, 11, 12),
+            new uint4(7, 8, 12, 13),
+            new uint4(8, 9, 13, 14),
+            new uint4(10, 11, 15, 16),
+            new uint4(11, 12, 16, 17),
+            new uint4(12, 13, 17, 18),
+            new uint4(13, 14, 18, 19),
+            new uint4(15, 16, 20, 21),
+            new uint4(16, 17, 21, 22),
+            new uint4(17, 18, 22, 23),
+            new uint4(18, 19, 23, 24)
+        };
 
-        public static float4[] wt_grids =
+        public static float4[] wt_grids_6x6 =
         {
             new float4(0.444f, 0.222f, 0.222f, 0.111f),
             new float4(0.222f, 0.444f, 0.111f, 0.222f),
@@ -169,6 +189,26 @@ namespace ASTCEncoder
             new float4(0.111f, 0.222f, 0.222f, 0.444f),
             new float4(0.222f, 0.111f, 0.444f, 0.222f),
             new float4(0.111f, 0.222f, 0.222f, 0.444f),
+        };
+        
+        public static float4[] wt_grids_5x5 =
+        {
+            new float4(0.5f, 0.25f, 0.25f, 0.0f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.0f, 0.25f, 0.25f, 0.5f),
+            new float4(0.5f, 0.25f, 0.25f, 0.0f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.0f, 0.25f, 0.25f, 0.5f),
+            new float4(0.5f, 0.25f, 0.25f, 0.0f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.0f, 0.25f, 0.25f, 0.5f),
+            new float4(0.5f, 0.25f, 0.25f, 0.0f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.25f, 0.5f, 0.0f, 0.25f),
+            new float4(0.0f, 0.25f, 0.25f, 0.5f)
         };
 
 
