@@ -161,17 +161,18 @@ namespace ASTCEncoder
         {
             int i = 0;
             float4 pt_mean = 0;
-            for (i = 0; i < ci.blockSize; ++i)
+            var blockSize = texels.Length;
+            for (i = 0; i < blockSize; ++i)
             {
                 pt_mean += texels[i];
             }
 
-            pt_mean /= ci.blockSize;
+            pt_mean /= blockSize;
 
             float[] cov = new float[16];
 
 
-            for (int k = 0; k < ci.blockSize; ++k)
+            for (int k = 0; k < blockSize; ++k)
             {
                 float4 texel = texels[k] - pt_mean;
 
@@ -188,7 +189,7 @@ namespace ASTCEncoder
 
             for (int q = 0; q < 16; ++q)
             {
-                cov[q] /= ci.blockSize - 1;
+                cov[q] /= blockSize - 1;
             }
 
             // 将 cov 数组重新组合成 float4x4（如果后续函数需要）
@@ -368,7 +369,7 @@ namespace ASTCEncoder
         {
             float a = 1e31f;
             float b = -1e31f;
-            for (int i = 0; i < ci.blockSize; ++i)
+            for (int i = 0; i < texels.Length; ++i)
             {
                 float4 texel = texels[i] - pt_mean;
                 float t = dot(texel, vec_k);
@@ -617,7 +618,7 @@ namespace ASTCEncoder
                 else
                 {
                     // 使用 blockSize 控制最大迭代数
-                    uint MAX_LOOPS = min(c, (uint)ci.blockSize);
+                    uint MAX_LOOPS = min(c, (uint)texels.Length);
 
 
                     for (i = 0; i < MAX_LOOPS; ++i)
