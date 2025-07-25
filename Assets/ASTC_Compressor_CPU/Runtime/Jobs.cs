@@ -1,5 +1,4 @@
-﻿using Lazyun.FixedTypes;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;

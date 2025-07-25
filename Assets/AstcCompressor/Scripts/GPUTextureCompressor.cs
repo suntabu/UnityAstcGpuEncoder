@@ -6,18 +6,6 @@ using UnityEngine.Rendering;
 
 namespace ASTCEncoder
 {
-    public enum ASTC_BLOCKSIZE
-    {
-        ASTC_4x4 = 1,
-
-        // ASTC_5x5 = 2,
-        ASTC_6x6 = 3,
-        // ASTC_8x8 = 4,
-        // ASTC_10x10 = 5,
-        // ASTC_12x12 = 6,
-    }
-
-
     public class GPUTextureCompressor
     {
         private const string BLOCK_SIZE_4x4 = "BLOCK_SIZE_4x4";
