@@ -7,79 +7,7 @@ namespace ASTCEncoder
 {
     public class Methods
     {
-        /// <summary>
-        /// 使用双线性插值从nativeArray<Color32>中采样像素
-        /// </summary>
-        /// <param name="buffer">像素数据缓冲区</param>
-        /// <param name="width">图像宽度</param>
-        /// <param name="height">图像高度</param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns>插值后的颜色</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float4 SampleBilinear(NativeArray<Color32> buffer, int width, int height, int x, int y)
-        {
-            // 获取四个相邻像素的整数坐标
-            int x0 = Mathf.FloorToInt(x);
-            int y0 = Mathf.FloorToInt(y);
-            int x1 = Mathf.Min(x0 + 1, width - 1);
-            int y1 = Mathf.Min(y0 + 1, height - 1);
-
-            // 计算插值权重
-            float fx = x - x0;
-            float fy = y - y0;
-
-            // 获取四个角点的颜色
-            Color32 c00 = GetPixel(buffer, width, height, x0, y0); // 左下
-            Color32 c10 = GetPixel(buffer, width, height, x1, y0); // 右下
-            Color32 c01 = GetPixel(buffer, width, height, x0, y1); // 左上
-            Color32 c11 = GetPixel(buffer, width, height, x1, y1); // 右上
-
-            // 双线性插值
-            return BilinearInterpolate(c00, c10, c01, c11, fx, fy);
-        }
-
-        /// <summary>
-        /// 根据像素坐标获取颜色（带边界检查）
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Color32 GetPixel(NativeArray<Color32> buffer, int width, int height, int x, int y)
-        {
-            // 边界处理（这里使用夹紧模式）
-            x = Mathf.Clamp(x, 0, width - 1);
-            y = Mathf.Clamp(y, 0, height - 1);
-
-            int index = y * width + x;
-            return buffer[index];
-        }
-
-        /// <summary>
-        /// 双线性插值计算
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float4 BilinearInterpolate(Color32 c00, Color32 c10, Color32 c01, Color32 c11, float fx,
-            float fy)
-        {
-            // 先在X方向进行线性插值
-            float r1 = Mathf.Lerp(c00.r, c10.r, fx);
-            float g1 = Mathf.Lerp(c00.g, c10.g, fx);
-            float b1 = Mathf.Lerp(c00.b, c10.b, fx);
-            float a1 = Mathf.Lerp(c00.a, c10.a, fx);
-
-            float r2 = Mathf.Lerp(c01.r, c11.r, fx);
-            float g2 = Mathf.Lerp(c01.g, c11.g, fx);
-            float b2 = Mathf.Lerp(c01.b, c11.b, fx);
-            float a2 = Mathf.Lerp(c01.a, c11.a, fx);
-
-            // 再在Y方向进行线性插值
-            byte r = (byte)Mathf.Lerp(r1, r2, fy);
-            byte g = (byte)Mathf.Lerp(g1, g2, fy);
-            byte b = (byte)Mathf.Lerp(b1, b2, fy);
-            byte a = (byte)Mathf.Lerp(a1, a2, fy);
-
-            return new float4(r, g, b, a);
-        }
-
         public static float4[] ReadBlockRGBA(CompressInfo compressInfo, NativeArray<Color32> source, int index)
         {
             var pixels = new float4[compressInfo.blockSize * compressInfo.blockSize];
@@ -102,11 +30,14 @@ namespace ASTCEncoder
             {
                 for (int x = 0; x < actualBlockWidth; x++)
                 {
+                    int srcIndex = (pixelStartY + y) * compressInfo.textureWidth + (pixelStartX + x);
                     int dstIndex = y * actualBlockWidth + x;
 
-                    var p = SampleBilinear(source, compressInfo.textureWidth, compressInfo.textureHeight,
-                        (x + pixelStartX), (y + pixelStartY));
-                    pixels[dstIndex] = p;
+                    if (srcIndex < source.Length && dstIndex < pixels.Length)
+                    {
+                        var p = source[srcIndex];
+                        pixels[dstIndex] = new float4(p.r, p.g, p.b, p.a);
+                    }
                 }
             }
 

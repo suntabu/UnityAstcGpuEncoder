@@ -62,11 +62,13 @@ namespace AstcCompressor.Scripts
             var tf = m_BlockSize switch
             {
                 ASTC_BLOCKSIZE.ASTC_4x4 => TextureFormat.ASTC_4x4,
+                ASTC_BLOCKSIZE.ASTC_5x5 => TextureFormat.ASTC_5x5,
                 ASTC_BLOCKSIZE.ASTC_6x6 => TextureFormat.ASTC_6x6,
                 _ => TextureFormat.ASTC_4x4
             };
 
             tex = new Texture2D(m_Texture.width, m_Texture.height, tf, false);
+            tex.filterMode = FilterMode.Trilinear;
             tex.LoadRawTextureData(bytes.ToArray());
             tex.Apply();
 
