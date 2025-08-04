@@ -227,7 +227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_RawImage: {fileID: 36041364}
   m_CompressShader: {fileID: 4800000, guid: 1b148435fdaa9d74283ff750550d590e, type: 3}
-  m_SourceTexture: {fileID: 2800000, guid: 24b616178e69cdb449afd08228fd0634, type: 3}
+  m_SourceTexture: {fileID: 2800000, guid: 9cfd589960198b54890b719e1c8f8393, type: 3}
   m_TargetTexture: {fileID: 0}
 --- !u!23 &332330898
 MeshRenderer:

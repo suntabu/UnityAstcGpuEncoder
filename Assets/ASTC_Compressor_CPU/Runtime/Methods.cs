@@ -1,16 +1,19 @@
 ﻿using System.Runtime.CompilerServices;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ASTCEncoder
+namespace LIBII
 {
     public class Methods
     {
+        [BurstCompile]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float4[] ReadBlockRGBA(CompressInfo compressInfo, NativeArray<Color32> source, int index)
+        public static NativeArray<float4> ReadBlockRGBA(CompressInfo compressInfo, NativeArray<Color32> source,
+            int index)
         {
-            var pixels = new float4[compressInfo.blockSize * compressInfo.blockSize];
+            var pixels = new NativeArray<float4>(compressInfo.blockSize * compressInfo.blockSize, Allocator.Temp);
 
             var dim = (int)compressInfo.blockSize;
             var blockCountX = compressInfo.BlockCountX;
@@ -44,7 +47,8 @@ namespace ASTCEncoder
             return pixels;
         }
 
-        public static uint4 EncodeBlock(float4[] texels, CompressInfo compressInfo)
+        [BurstCompile]
+        public static uint4 EncodeBlock(NativeArray<float4> texels, CompressInfo compressInfo)
         {
             principal_component_analysis(compressInfo, texels, out var ep0, out var ep1);
             //max_accumulation_pixel_direction(texels, ep0, ep1);
@@ -88,7 +92,8 @@ namespace ASTCEncoder
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void principal_component_analysis(CompressInfo ci, float4[] texels, out float4 e0, out float4 e1)
+        static void principal_component_analysis(CompressInfo ci, NativeArray<float4> texels, out float4 e0,
+            out float4 e1)
         {
             int i = 0;
             float4 pt_mean = 0;
@@ -200,7 +205,7 @@ namespace ASTCEncoder
             endpoint_quantized[7] = e1q.w;
         }
 
-        static uint4 weight_ise(CompressInfo ci, float4[] texels, uint weight_range, float4 ep0, float4 ep1,
+        static uint4 weight_ise(CompressInfo ci, NativeArray<float4> texels, uint weight_range, float4 ep0, float4 ep1,
             uint weight_quantmethod)
         {
             int i = 0;
@@ -294,7 +299,7 @@ namespace ASTCEncoder
             return v;
         }
 
-        static void find_min_max(CompressInfo ci, float4[] texels, float4 pt_mean, float4 vec_k,
+        static void find_min_max(CompressInfo ci, NativeArray<float4> texels, float4 pt_mean, float4 vec_k,
             out float4 e0,
             out float4 e1)
         {
@@ -371,7 +376,7 @@ namespace ASTCEncoder
 
         static void calculate_quantized_weights(
             CompressInfo ci,
-            float4[] texels,
+            NativeArray<float4> texels,
             uint weight_range,
             float4 ep0,
             float4 ep1,
@@ -513,7 +518,7 @@ namespace ASTCEncoder
         }
 
 
-        static void calculate_normal_weights(CompressInfo ci, float4[] texels,
+        static void calculate_normal_weights(CompressInfo ci, NativeArray<float4> texels,
             float4 ep0,
             float4 ep1,
             ref float[] projw)
@@ -545,7 +550,8 @@ namespace ASTCEncoder
                         maxw = max(w, maxw);
                         projw[i] = w;
                     }
-                }else if (ci.dim == ASTC_BLOCKSIZE.ASTC_5x5)
+                }
+                else if (ci.dim == ASTC_BLOCKSIZE.ASTC_5x5)
                 {
                     for (i = 0; i < c; ++i)
                     {
@@ -589,12 +595,12 @@ namespace ASTCEncoder
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static float4 sample_texel(float4[] texels, uint4 index, float4 coff)
+        static float4 sample_texel(NativeArray<float4> texels, uint4 index, float4 coff)
         {
-            float4 sum = texels[index.x] * coff.x;
-            sum += texels[index.y] * coff.y;
-            sum += texels[index.z] * coff.z;
-            sum += texels[index.w] * coff.w;
+            float4 sum = texels[(int)index.x] * coff.x;
+            sum += texels[(int)index.y] * coff.y;
+            sum += texels[(int)index.z] * coff.z;
+            sum += texels[(int)index.w] * coff.w;
             return sum;
         }
 

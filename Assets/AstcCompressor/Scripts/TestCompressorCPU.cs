@@ -3,6 +3,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using ASTCEncoder;
+using LIBII;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;

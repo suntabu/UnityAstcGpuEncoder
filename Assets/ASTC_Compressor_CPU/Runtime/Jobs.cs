@@ -1,10 +1,14 @@
-﻿using Unity.Collections;
+﻿using System;
+using System.Runtime.InteropServices;
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ASTCEncoder
+namespace LIBII
 {
+    [BurstCompile]
     public struct CompressorJob : IJobParallelFor
     {
         [NativeDisableParallelForRestriction] public NativeArray<Color32> source;
@@ -13,6 +17,7 @@ namespace ASTCEncoder
 
         public CompressInfo ci;
 
+        public int BlockCount => ci.BlockCount;
 
         public void Execute(int index)
         {
@@ -22,6 +27,20 @@ namespace ASTCEncoder
             // compress
             result[index] = Methods.EncodeBlock(blockData, ci);
         }
+
+
+        public Span<byte> GetResult()
+        {
+            var bytes = MemoryMarshal.Cast<uint4, byte>(result.AsSpan());
+            return bytes;
+        }
+
+        public void Dispose()
+        {
+            source.Dispose();
+            result.Dispose();
+        }
+
 
         public static CompressorJob Create(Texture2D tex, ASTC_BLOCKSIZE blockSize, bool hasAlpha = true)
         {

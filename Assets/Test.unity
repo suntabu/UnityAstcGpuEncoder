@@ -385,7 +385,7 @@ MonoBehaviour:
   m_Texture: {fileID: 2800000, guid: 953accfe9bcc5634282754b075dec851, type: 3}
   m_RawImage: {fileID: 87855986}
   m_RawImage_Src: {fileID: 778562863}
-  m_BlockSize: 6
+  m_BlockSize: 5
 --- !u!1 &1706086185
 GameObject:
   m_ObjectHideFlags: 0

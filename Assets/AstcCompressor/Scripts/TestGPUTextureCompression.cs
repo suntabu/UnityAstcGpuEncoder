@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using ASTCEncoder;
+using LIBII;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
