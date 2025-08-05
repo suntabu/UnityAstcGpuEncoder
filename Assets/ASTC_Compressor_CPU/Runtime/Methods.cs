@@ -105,7 +105,7 @@ namespace LIBII
 
             pt_mean /= blockSize;
 
-            float[] cov = new float[16];
+            Array16<float> cov = new Array16<float>();
 
 
             for (int k = 0; k < blockSize; ++k)
@@ -176,7 +176,7 @@ namespace LIBII
             uint endpoint_quantmethod)
         {
             // encode endpoints
-            uint[] ep_quantized = new uint[8];
+            Array8<uint> ep_quantized = new Array8<uint>();
             encode_color(colorquant_index, ep0, ep1, ref ep_quantized);
 
             if (!ci.hasAlpha)
@@ -191,7 +191,7 @@ namespace LIBII
             return ep_ise;
         }
 
-        static void encode_color(uint qm_index, float4 e0, float4 e1, ref uint[] endpoint_quantized)
+        static void encode_color(uint qm_index, float4 e0, float4 e1, ref Array8<uint> endpoint_quantized)
         {
             uint4 e0q = (uint4)round(e0);
             uint4 e1q = (uint4)round(e1);
@@ -211,7 +211,7 @@ namespace LIBII
             int i = 0;
             uint c = CC.X_GRIDS * CC.Y_GRIDS;
             // encode weights
-            uint[] wt_quantized = new uint[c];
+            Array16<uint> wt_quantized = new Array16<uint>();
             calculate_quantized_weights(ci, texels, weight_range, ep0, ep1, ref wt_quantized);
 
 
@@ -339,7 +339,7 @@ namespace LIBII
             (lhs, rhs) = (rhs, lhs);
         }
 
-        static void bise_endpoints(CompressInfo ci, uint[] numbers, uint range, ref uint4 outputs)
+        static void bise_endpoints(CompressInfo ci, Array8<uint> numbers, uint range, ref uint4 outputs)
         {
             uint bitpos = 0;
             uint bits = CC.bits_trits_quints_table[range * 3 + 0];
@@ -380,14 +380,14 @@ namespace LIBII
             uint weight_range,
             float4 ep0,
             float4 ep1,
-            ref uint[] weights)
+            ref Array16<uint> weights)
         {
-            float[] projw = new float[CC.X_GRIDS * CC.Y_GRIDS];
+            var projw = new Array16<float>();
             calculate_normal_weights(ci, texels, ep0, ep1, ref projw);
             quantize_weights(projw, weight_range, ref weights);
         }
 
-        static void bise_weights(uint[] nums, uint range, ref uint4 outputs)
+        static void bise_weights(Array16<uint> nums, uint range, ref uint4 outputs)
         {
             uint bitpos = 0;
             uint bits = CC.bits_trits_quints_table[range * 3 + 0];
@@ -505,7 +505,11 @@ namespace LIBII
             uint uidx = bitoffset >> 5;
             uint bit_idx = bitoffset & 31;
 
-            uint[] bytes = { outputs.x, outputs.y, outputs.z, outputs.w };
+            Array4<uint> bytes = new Array4<uint>();
+            bytes[0] = outputs.x;
+            bytes[1] = outputs.y;
+            bytes[2] = outputs.z;
+            bytes[3] = outputs.w;
             bytes[uidx] |= (number << (int)bit_idx);
             bytes[uidx + 1] |= (uint)((nidx > uidx) ? ((int)number >> (int)(32 - bit_idx)) : 0);
 
@@ -521,7 +525,7 @@ namespace LIBII
         static void calculate_normal_weights(CompressInfo ci, NativeArray<float4> texels,
             float4 ep0,
             float4 ep1,
-            ref float[] projw)
+            ref Array16<float> projw)
         {
             int i = 0;
             float4 vec_k = ep1 - ep0;
@@ -605,9 +609,9 @@ namespace LIBII
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void quantize_weights(float[] projw,
+        static void quantize_weights(Array16<float> projw,
             uint weight_range,
-            ref uint[] weights)
+            ref Array16<uint> weights)
         {
             var c = CC.X_GRIDS * CC.Y_GRIDS;
             for (int i = 0; i < c; ++i)

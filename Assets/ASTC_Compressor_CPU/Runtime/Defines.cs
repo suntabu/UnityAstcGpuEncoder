@@ -30,11 +30,11 @@ namespace LIBII
 
     public class CC
     {
-        public static float SMALL_VALUE = 0.00001f;
-        public static uint Y_GRIDS = 4;
-        public static uint X_GRIDS = 4;
-        public static uint CEM_LDR_RGB_DIRECT = 8;
-        public static uint CEM_LDR_RGBA_DIRECT = 12;
+        public const float SMALL_VALUE = 0.00001f;
+        public const uint Y_GRIDS = 4;
+        public const uint X_GRIDS = 4;
+        public const uint CEM_LDR_RGB_DIRECT = 8;
+        public const uint CEM_LDR_RGBA_DIRECT = 12;
         public const int k_WEIGHT_QUANTIZE_NUM = 32;
         public const int k_BLOCK_BYTES = 32;
 
@@ -131,7 +131,7 @@ namespace LIBII
             102, 103, 70, 71, 38, 110, 111, 78, 79, 46, 118, 119, 86, 87, 54, 126, 127, 94, 95, 62, 39, 47, 55, 63, 31
         };
 
-        public static uint4[] idx_grids_6x6 = new uint4[]
+        public static readonly Array16<uint4> idx_grids_6x6 = new Array16<uint4>()
         {
             new uint4(0, 1, 6, 7),
             new uint4(1, 2, 7, 8),
@@ -150,8 +150,8 @@ namespace LIBII
             new uint4(27, 28, 33, 34),
             new uint4(28, 29, 34, 35),
         };
-        
-        public static uint4[] idx_grids_5x5 = new uint4[]
+
+        public static readonly Array16<uint4> idx_grids_5x5 = new()
         {
             new uint4(0, 1, 5, 6),
             new uint4(1, 2, 6, 7),
@@ -171,7 +171,7 @@ namespace LIBII
             new uint4(18, 19, 23, 24)
         };
 
-        public static float4[] wt_grids_6x6 =
+        public static readonly Array16<float4> wt_grids_6x6 = new()
         {
             new float4(0.444f, 0.222f, 0.222f, 0.111f),
             new float4(0.222f, 0.444f, 0.111f, 0.222f),
@@ -190,8 +190,8 @@ namespace LIBII
             new float4(0.222f, 0.111f, 0.444f, 0.222f),
             new float4(0.111f, 0.222f, 0.222f, 0.444f),
         };
-        
-        public static float4[] wt_grids_5x5 =
+
+        public static readonly Array16<float4> wt_grids_5x5 = new()
         {
             new float4(0.5f, 0.25f, 0.25f, 0.0f),
             new float4(0.25f, 0.5f, 0.0f, 0.25f),
