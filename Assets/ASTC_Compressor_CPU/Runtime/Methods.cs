@@ -48,9 +48,9 @@ namespace LIBII
         }
 
         [BurstCompile]
-        public static uint4 EncodeBlock(NativeArray<float4> texels, CompressInfo compressInfo)
+        public static uint4 EncodeBlock(ref NativeArray<float4> texels, CompressInfo compressInfo)
         {
-            principal_component_analysis(compressInfo, texels, out var ep0, out var ep1);
+            principal_component_analysis(compressInfo, ref texels, out var ep0, out var ep1);
             //max_accumulation_pixel_direction(texels, ep0, ep1);
 
             // endpoints_quant是根据整个128bits减去weights的编码占用和其他配置占用后剩余的bits位数来确定的。
@@ -78,7 +78,7 @@ namespace LIBII
 
             uint4 ep_ise = endpoint_ise(compressInfo, colorquant_index, ep0, ep1, endpoint_quantmethod);
 
-            uint4 wt_ise = weight_ise(compressInfo, texels, weight_range - 1, ep0, ep1, weight_quantmethod);
+            uint4 wt_ise = weight_ise(compressInfo, ref texels, weight_range - 1, ep0, ep1, weight_quantmethod);
 
             // assemble to astcblock
             uint color_endpoint_mode;
@@ -92,7 +92,7 @@ namespace LIBII
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void principal_component_analysis(CompressInfo ci, NativeArray<float4> texels, out float4 e0,
+        static void principal_component_analysis(CompressInfo ci, ref NativeArray<float4> texels, out float4 e0,
             out float4 e1)
         {
             int i = 0;
@@ -139,7 +139,7 @@ namespace LIBII
             // 继续 PCA 计算...
             float4 vec_k = eigen_vector(covMatrix);
 
-            find_min_max(ci, texels, pt_mean, vec_k, out e0, out e1);
+            find_min_max(ci, ref texels, pt_mean, vec_k, out e0, out e1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -205,14 +205,14 @@ namespace LIBII
             endpoint_quantized[7] = e1q.w;
         }
 
-        static uint4 weight_ise(CompressInfo ci, NativeArray<float4> texels, uint weight_range, float4 ep0, float4 ep1,
+        static uint4 weight_ise(CompressInfo ci, ref NativeArray<float4> texels, uint weight_range, float4 ep0, float4 ep1,
             uint weight_quantmethod)
         {
             int i = 0;
             uint c = CC.X_GRIDS * CC.Y_GRIDS;
             // encode weights
             Array16<uint> wt_quantized = new Array16<uint>();
-            calculate_quantized_weights(ci, texels, weight_range, ep0, ep1, ref wt_quantized);
+            calculate_quantized_weights(ci, ref texels, weight_range, ep0, ep1, ref wt_quantized);
 
 
             for (i = 0; i < c; ++i)
@@ -299,7 +299,7 @@ namespace LIBII
             return v;
         }
 
-        static void find_min_max(CompressInfo ci, NativeArray<float4> texels, float4 pt_mean, float4 vec_k,
+        static void find_min_max(CompressInfo ci, ref NativeArray<float4> texels, float4 pt_mean, float4 vec_k,
             out float4 e0,
             out float4 e1)
         {
@@ -376,14 +376,14 @@ namespace LIBII
 
         static void calculate_quantized_weights(
             CompressInfo ci,
-            NativeArray<float4> texels,
+            ref NativeArray<float4> texels,
             uint weight_range,
             float4 ep0,
             float4 ep1,
             ref Array16<uint> weights)
         {
             var projw = new Array16<float>();
-            calculate_normal_weights(ci, texels, ep0, ep1, ref projw);
+            calculate_normal_weights(ci, ref texels, ep0, ep1, ref projw);
             quantize_weights(projw, weight_range, ref weights);
         }
 
@@ -522,7 +522,7 @@ namespace LIBII
         }
 
 
-        static void calculate_normal_weights(CompressInfo ci, NativeArray<float4> texels,
+        static void calculate_normal_weights(CompressInfo ci, ref NativeArray<float4> texels,
             float4 ep0,
             float4 ep1,
             ref Array16<float> projw)
@@ -548,7 +548,7 @@ namespace LIBII
                 {
                     for (i = 0; i < c; ++i)
                     {
-                        float4 sum = sample_texel(texels, CC.idx_grids_6x6[i], CC.wt_grids_6x6[i]);
+                        float4 sum = sample_texel(ref texels, CC.idx_grids_6x6[i], CC.wt_grids_6x6[i]);
                         float w = dot(vec_k, sum - ep0);
                         minw = min(w, minw);
                         maxw = max(w, maxw);
@@ -559,7 +559,7 @@ namespace LIBII
                 {
                     for (i = 0; i < c; ++i)
                     {
-                        float4 sum = sample_texel(texels, CC.idx_grids_5x5[i], CC.wt_grids_5x5[i]);
+                        float4 sum = sample_texel(ref texels, CC.idx_grids_5x5[i], CC.wt_grids_5x5[i]);
                         float w = dot(vec_k, sum - ep0);
                         minw = min(w, minw);
                         maxw = max(w, maxw);
@@ -599,7 +599,7 @@ namespace LIBII
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static float4 sample_texel(NativeArray<float4> texels, uint4 index, float4 coff)
+        static float4 sample_texel(ref NativeArray<float4> texels, uint4 index, float4 coff)
         {
             float4 sum = texels[(int)index.x] * coff.x;
             sum += texels[(int)index.y] * coff.y;

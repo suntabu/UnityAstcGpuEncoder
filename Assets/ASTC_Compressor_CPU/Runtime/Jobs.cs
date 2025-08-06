@@ -25,7 +25,7 @@ namespace LIBII
             var blockData = Methods.ReadBlockRGBA(ci, source, index);
 
             // compress
-            result[index] = Methods.EncodeBlock(blockData, ci);
+            result[index] = Methods.EncodeBlock(ref blockData, ci);
         }
 
 
