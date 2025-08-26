@@ -41,18 +41,18 @@ namespace AstcCompressor.Scripts
         void Compress()
         {
             m_RawImage_Src.texture = m_Texture;
-            
-            var job = CompressorJob.Create(m_Texture, m_BlockSize);
+            var compressor = new CompressorASTC(m_Texture, m_BlockSize);
+
             var sw = Stopwatch.StartNew();
-            var handle = job.Schedule(job.ci.BlockCount, 32);
+            var handle =compressor.Compress();
 
             handle.Complete();
             Debug.Log($"time:{sw.ElapsedMilliseconds}");
 
-            var result = job.result;
+            var result = compressor.GetResult();
             Debug.Log($"time:{sw.ElapsedMilliseconds}");
 
-            var bytes = MemoryMarshal.Cast<uint4, byte>(result.ToArray().AsSpan());
+            var bytes = result;
 
             Debug.Log($"time:{sw.ElapsedMilliseconds}");
             if (!tex)

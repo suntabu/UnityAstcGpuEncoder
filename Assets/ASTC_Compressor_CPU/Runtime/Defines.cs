@@ -1,6 +1,7 @@
-﻿using Unity.Mathematics;
+﻿using ASTCEncoder;
+using Unity.Mathematics;
 
-namespace LIBII
+namespace ASTCEncoder
 {
     public enum ASTC_BLOCKSIZE
     {

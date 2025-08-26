@@ -1,20 +1,19 @@
 ﻿using System.Runtime.CompilerServices;
+using LIBII;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace LIBII
+namespace ASTCEncoder
 {
     public class Methods
     {
         [BurstCompile]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NativeArray<float4> ReadBlockRGBA(CompressInfo compressInfo, NativeArray<Color32> source,
-            int index)
+        public static T ReadBlockRGBA<T>(CompressInfo compressInfo, NativeArray<Color32> source,
+            int index, T block) where T : unmanaged, INativeArray<float4>
         {
-            var pixels = new NativeArray<float4>(compressInfo.blockSize * compressInfo.blockSize, Allocator.Temp);
-
             var dim = (int)compressInfo.blockSize;
             var blockCountX = compressInfo.BlockCountX;
             int blockX = index % blockCountX;
@@ -36,19 +35,20 @@ namespace LIBII
                     int srcIndex = (pixelStartY + y) * compressInfo.textureWidth + (pixelStartX + x);
                     int dstIndex = y * actualBlockWidth + x;
 
-                    if (srcIndex < source.Length && dstIndex < pixels.Length)
+                    if (srcIndex < source.Length && dstIndex < block.Length)
                     {
                         var p = source[srcIndex];
-                        pixels[dstIndex] = new float4(p.r, p.g, p.b, p.a);
+                        block[dstIndex] = new float4(p.r, p.g, p.b, p.a);
                     }
                 }
             }
 
-            return pixels;
+            return block;
         }
 
         [BurstCompile]
-        public static uint4 EncodeBlock(NativeArray<float4> texels, CompressInfo compressInfo)
+        public static uint4 EncodeBlock<T>(T texels, CompressInfo compressInfo)
+            where T : unmanaged, INativeArray<float4>
         {
             principal_component_analysis(compressInfo, texels, out var ep0, out var ep1);
             //max_accumulation_pixel_direction(texels, ep0, ep1);
@@ -92,8 +92,8 @@ namespace LIBII
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void principal_component_analysis(CompressInfo ci, NativeArray<float4> texels, out float4 e0,
-            out float4 e1)
+        static void principal_component_analysis<T>(CompressInfo ci, T texels, out float4 e0,
+            out float4 e1) where T : unmanaged, INativeArray<float4>
         {
             int i = 0;
             float4 pt_mean = 0;
@@ -205,8 +205,8 @@ namespace LIBII
             endpoint_quantized[7] = e1q.w;
         }
 
-        static uint4 weight_ise(CompressInfo ci, NativeArray<float4> texels, uint weight_range, float4 ep0, float4 ep1,
-            uint weight_quantmethod)
+        static uint4 weight_ise<T>(CompressInfo ci, T texels, uint weight_range, float4 ep0, float4 ep1,
+            uint weight_quantmethod) where T : unmanaged, INativeArray<float4>
         {
             int i = 0;
             uint c = CC.X_GRIDS * CC.Y_GRIDS;
@@ -299,9 +299,9 @@ namespace LIBII
             return v;
         }
 
-        static void find_min_max(CompressInfo ci, NativeArray<float4> texels, float4 pt_mean, float4 vec_k,
+        static void find_min_max<T>(CompressInfo ci, T texels, float4 pt_mean, float4 vec_k,
             out float4 e0,
-            out float4 e1)
+            out float4 e1) where T : unmanaged, INativeArray<float4>
         {
             float a = 1e31f;
             float b = -1e31f;
@@ -374,13 +374,13 @@ namespace LIBII
             }
         }
 
-        static void calculate_quantized_weights(
+        static void calculate_quantized_weights<T>(
             CompressInfo ci,
-            NativeArray<float4> texels,
+            T texels,
             uint weight_range,
             float4 ep0,
             float4 ep1,
-            ref Array16<uint> weights)
+            ref Array16<uint> weights) where T : unmanaged, INativeArray<float4>
         {
             var projw = new Array16<float>();
             calculate_normal_weights(ci, texels, ep0, ep1, ref projw);
@@ -522,10 +522,10 @@ namespace LIBII
         }
 
 
-        static void calculate_normal_weights(CompressInfo ci, NativeArray<float4> texels,
+        static void calculate_normal_weights<T>(CompressInfo ci, T texels,
             float4 ep0,
             float4 ep1,
-            ref Array16<float> projw)
+            ref Array16<float> projw) where T : unmanaged, INativeArray<float4>
         {
             int i = 0;
             float4 vec_k = ep1 - ep0;
@@ -599,7 +599,7 @@ namespace LIBII
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static float4 sample_texel(NativeArray<float4> texels, uint4 index, float4 coff)
+        static float4 sample_texel<T>(T texels, uint4 index, float4 coff) where T : unmanaged, INativeArray<float4>
         {
             float4 sum = texels[(int)index.x] * coff.x;
             sum += texels[(int)index.y] * coff.y;
